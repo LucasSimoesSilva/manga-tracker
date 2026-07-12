@@ -1,56 +1,80 @@
 import 'package:flutter/material.dart';
 import '../models/manga.dart';
 
-class ReadingScreen extends StatefulWidget {
-  const ReadingScreen({super.key});
+class ReadingScreen extends StatelessWidget {
+  final List<Manga> mangas;
+  final Function(Manga) onIncrement;
+  final Function(Manga, int) onUpdateTotal;
 
-  @override
-  State<ReadingScreen> createState() => _ReadingScreenState();
-}
+  const ReadingScreen({
+    super.key,
+    required this.mangas,
+    required this.onIncrement,
+    required this.onUpdateTotal,
+  });
 
-class _ReadingScreenState extends State<ReadingScreen> {
-  // (Mock)
-  final List<Manga> _myMangas = [
-    Manga(
-      id: '1',
-      title: 'Solo Leveling',
-      coverUrl: 'https://cdn.myanimelist.net/images/manga/3/222295.jpg',
-      type: 'Manhwa',
-      currentChapter: 110,
-    ),
-    Manga(
-      id: '2',
-      title: 'Berserk',
-      coverUrl: 'https://cdn.myanimelist.net/images/manga/1/157897.jpg',
-      type: 'Manga',
-      currentChapter: 364,
-    ),
-  ];
+  void _showEditTotalDialog(BuildContext context, Manga manga) {
+    final TextEditingController controller = TextEditingController(
+      text: manga.totalChapters.toString(),
+    );
 
-  void _incrementChapter(int index) {
-    setState(() {
-      _myMangas[index].currentChapter++;
-    });
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Edit Total for ${manga.title}'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Latest Available Chapter',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final newTotal = int.tryParse(controller.text) ?? manga.totalChapters;
+                onUpdateTotal(manga, newTotal);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.black,
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (mangas.isEmpty) {
+      return const Center(
+        child: Text('No mangas in your Reading list.'),
+      );
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.all(12.0),
-      itemCount: _myMangas.length,
+      itemCount: mangas.length,
       itemBuilder: (context, index) {
-        final manga = _myMangas[index];
+        final manga = mangas[index];
 
         return Card(
           color: const Color(0xFF1E1E1E),
           elevation: 4,
           margin: const EdgeInsets.only(bottom: 16.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Row(
             children: [
-              // MANGA COVER
               ClipRRect(
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(12),
@@ -61,7 +85,6 @@ class _ReadingScreenState extends State<ReadingScreen> {
                   width: 90,
                   height: 130,
                   fit: BoxFit.cover,
-                  // If the image does not load
                   errorBuilder: (context, error, stackTrace) => Container(
                     width: 90,
                     height: 130,
@@ -71,8 +94,6 @@ class _ReadingScreenState extends State<ReadingScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              
-              // MANGA INFO
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
@@ -100,20 +121,28 @@ class _ReadingScreenState extends State<ReadingScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 16),
-                      // Controle de Capítulos
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Ch. ${manga.currentChapter}',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white70,
+                          GestureDetector(
+                            onTap: () => _showEditTotalDialog(context, manga),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Ch. ${manga.currentChapter} / ${manga.totalChapters}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.edit, size: 16, color: Colors.grey),
+                              ],
                             ),
                           ),
                           IconButton(
-                            onPressed: () => _incrementChapter(index),
+                            onPressed: () => onIncrement(manga),
                             icon: const Icon(Icons.add_circle),
                             color: Theme.of(context).primaryColor,
                             iconSize: 32,
