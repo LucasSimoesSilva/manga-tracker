@@ -30,8 +30,7 @@ class _MainScreenState extends State<MainScreen> {
           'https://cdn.myanimelist.net/images/manga/3/209957.jpg',
       type: 'Manga',
       status: 'ongoing',
-      currentChapter:
-          90,
+      currentChapter: 90,
       totalChapters: 90,
     ),
   ];
@@ -39,7 +38,6 @@ class _MainScreenState extends State<MainScreen> {
   final List<String> _titles = [
     'Reading',
     'Up to Date',
-    'Paused',
     'Completed',
     'Account',
   ];
@@ -56,6 +54,12 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void _addMangaToList(Manga manga) {
+    setState(() {
+      _myAllMangas.add(manga);
+    });
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -64,13 +68,16 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Filtros dinâmicos baseados no seu progresso
     final readingMangas = _myAllMangas
-        .where((m) => m.currentChapter < m.totalChapters)
+        .where(
+          (m) => m.currentChapter < m.totalChapters || m.totalChapters == 0,
+        )
         .toList();
 
     final upToDateMangas = _myAllMangas
-        .where((m) => m.currentChapter >= m.totalChapters)
+        .where(
+          (m) => m.totalChapters > 0 && m.currentChapter >= m.totalChapters,
+        )
         .toList();
 
     final List<Widget> screens = [
@@ -81,10 +88,8 @@ class _MainScreenState extends State<MainScreen> {
       ),
       UpToDateScreen(
         mangas: upToDateMangas,
-        onUpdateTotal:
-            _updateTotalChapters,
+        onUpdateTotal: _updateTotalChapters,
       ),
-      const PausedScreen(),
       const CompletedScreen(),
       const AccountScreen(),
     ];
@@ -113,7 +118,6 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.update),
             label: 'Up to Date',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.pause), label: 'Paused'),
           BottomNavigationBarItem(
             icon: Icon(Icons.done_all),
             label: 'Completed',
@@ -127,7 +131,9 @@ class _MainScreenState extends State<MainScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const SearchScreen()),
+            MaterialPageRoute(
+              builder: (context) => SearchScreen(onMangaAdded: _addMangaToList),
+            ),
           );
         },
         child: const Icon(Icons.search),
@@ -318,14 +324,6 @@ class UpToDateScreen extends StatelessWidget {
       },
     );
   }
-}
-
-// Demais placeholders limpos
-class PausedScreen extends StatelessWidget {
-  const PausedScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const Center(child: Text('Paused or Archived mangas.'));
 }
 
 class CompletedScreen extends StatelessWidget {

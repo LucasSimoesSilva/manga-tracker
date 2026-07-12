@@ -26,8 +26,8 @@ class MyMangaApp extends StatelessWidget {
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.black,
-          foregroundColor: accentYellow, // Yellow text/icons on the AppBar
-          elevation: 1, // Slight shadow below the AppBar
+          foregroundColor: accentYellow,
+          elevation: 1,
           shadowColor: accentYellow,
         ),
         textTheme: const TextTheme(

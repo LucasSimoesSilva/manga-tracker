@@ -38,7 +38,8 @@ class ReadingScreen extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                final newTotal = int.tryParse(controller.text) ?? manga.totalChapters;
+                final newTotal =
+                    int.tryParse(controller.text) ?? manga.totalChapters;
                 onUpdateTotal(manga, newTotal);
                 Navigator.pop(context);
               },
@@ -57,9 +58,7 @@ class ReadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (mangas.isEmpty) {
-      return const Center(
-        child: Text('No mangas in your Reading list.'),
-      );
+      return const Center(child: Text('No mangas in your Reading list.'));
     }
 
     return ListView.builder(
@@ -72,7 +71,9 @@ class ReadingScreen extends StatelessWidget {
           color: const Color(0xFF1E1E1E),
           elevation: 4,
           margin: const EdgeInsets.only(bottom: 16.0),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Row(
             children: [
               ClipRRect(
@@ -96,7 +97,10 @@ class ReadingScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12.0,
+                    horizontal: 8.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -137,7 +141,11 @@ class ReadingScreen extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 6),
-                                const Icon(Icons.edit, size: 16, color: Colors.grey),
+                                const Icon(
+                                  Icons.edit,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
                               ],
                             ),
                           ),

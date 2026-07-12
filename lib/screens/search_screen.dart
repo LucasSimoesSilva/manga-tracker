@@ -4,7 +4,9 @@ import 'package:http/http.dart' as http;
 import '../models/manga.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  final Function(Manga) onMangaAdded;
+
+  const SearchScreen({super.key, required this.onMangaAdded});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -24,7 +26,6 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     final query = Uri.encodeComponent(_searchController.text);
-
     final url = Uri.parse(
       'https://api.mangadex.org/manga?title=$query&includes[]=cover_art&order[relevance]=desc',
     );
@@ -119,6 +120,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   trailing: IconButton(
                     icon: const Icon(Icons.add),
                     onPressed: () {
+                      widget.onMangaAdded(manga);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('${manga.title} added!')),
                       );
