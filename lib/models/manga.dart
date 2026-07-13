@@ -4,6 +4,7 @@ class Manga {
   final String coverUrl;
   final String type;
   final String status;
+  bool isCompleted;
   int currentChapter;
   int totalChapters;
 
@@ -13,6 +14,7 @@ class Manga {
     required this.coverUrl,
     required this.type,
     required this.status,
+    required this.isCompleted,
     required this.currentChapter,
     required this.totalChapters,
   });
@@ -51,6 +53,7 @@ class Manga {
       coverUrl: coverUrl,
       type: attributes['originalLanguage'] == 'ko' ? 'Manhwa' : 'Manga',
       status: attributes['status'] ?? 'unknown',
+      isCompleted: false,
       currentChapter: 0,
       totalChapters: parsedTotalChapters,
     );

@@ -5,6 +5,7 @@ class ReadingScreen extends StatelessWidget {
   final List<Manga> mangas;
   final Function(Manga) onIncrement;
   final Function(Manga) onDecrement;
+  final Function(Manga) onComplete;
   final Function(Manga, int) onUpdateTotal;
 
   const ReadingScreen({
@@ -12,6 +13,7 @@ class ReadingScreen extends StatelessWidget {
     required this.mangas,
     required this.onIncrement,
     required this.onDecrement,
+    required this.onComplete,
     required this.onUpdateTotal,
   });
 
@@ -106,14 +108,27 @@ class ReadingScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        manga.type.toUpperCase(),
-                        style: const TextStyle(
-                          color: Color(0xFFFFFE4F),
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            manga.type.toUpperCase(),
+                            style: const TextStyle(
+                              color: Color(0xFFFFFE4F),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => onComplete(manga),
+                            icon: const Icon(Icons.check_circle_outline),
+                            color: Colors.grey,
+                            iconSize: 20,
+                            constraints: const BoxConstraints(),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(
