@@ -4,12 +4,14 @@ import '../models/manga.dart';
 class ReadingScreen extends StatelessWidget {
   final List<Manga> mangas;
   final Function(Manga) onIncrement;
+  final Function(Manga) onDecrement;
   final Function(Manga, int) onUpdateTotal;
 
   const ReadingScreen({
     super.key,
     required this.mangas,
     required this.onIncrement,
+    required this.onDecrement,
     required this.onUpdateTotal,
   });
 
@@ -135,25 +137,35 @@ class ReadingScreen extends StatelessWidget {
                                 Text(
                                   'Ch. ${manga.currentChapter} / ${manga.totalChapters}',
                                   style: const TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white70,
                                   ),
                                 ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 4),
                                 const Icon(
                                   Icons.edit,
-                                  size: 16,
+                                  size: 14,
                                   color: Colors.grey,
                                 ),
                               ],
                             ),
                           ),
-                          IconButton(
-                            onPressed: () => onIncrement(manga),
-                            icon: const Icon(Icons.add_circle),
-                            color: Theme.of(context).primaryColor,
-                            iconSize: 32,
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: () => onDecrement(manga),
+                                icon: const Icon(Icons.remove_circle_outline),
+                                color: Colors.grey,
+                                iconSize: 28,
+                              ),
+                              IconButton(
+                                onPressed: () => onIncrement(manga),
+                                icon: const Icon(Icons.add_circle),
+                                color: Theme.of(context).primaryColor,
+                                iconSize: 28,
+                              ),
+                            ],
                           ),
                         ],
                       ),

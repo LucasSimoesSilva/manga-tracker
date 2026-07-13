@@ -48,6 +48,14 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
+  void _decrementChapter(Manga manga) {
+    if (manga.currentChapter > 0) {
+      setState(() {
+        manga.currentChapter--;
+      });
+    }
+  }
+
   void _updateTotalChapters(Manga manga, int newTotal) {
     setState(() {
       manga.totalChapters = newTotal;
@@ -84,6 +92,7 @@ class _MainScreenState extends State<MainScreen> {
       ReadingScreen(
         mangas: readingMangas,
         onIncrement: _incrementChapter,
+        onDecrement: _decrementChapter,
         onUpdateTotal: _updateTotalChapters,
       ),
       UpToDateScreen(
