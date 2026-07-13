@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/main_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const String supabasePubliKey = String.fromEnvironment('SUPABASE_PUBLI_KEY');
+
+  await Supabase.initialize(url: supabaseUrl, publishableKey: supabasePubliKey);
+
   runApp(const MyMangaApp());
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/manga.dart';
 import 'reading_screen.dart';
 import 'search_screen.dart';
@@ -12,28 +13,9 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-
-  final List<Manga> _myAllMangas = [
-    Manga(
-      id: '39c71a07-1f0c-4395-9b7d-6dc357d6b38c',
-      title: 'Kengan Omega',
-      coverUrl: 'https://cdn.myanimelist.net/images/manga/1/216684.jpg',
-      type: 'Manga',
-      status: 'ongoing',
-      currentChapter: 230,
-      totalChapters: 232,
-    ),
-    Manga(
-      id: 'b5b21ca1-7d3d-4b92-8015-7798319fbd1d',
-      title: 'Shuumatsu no Valkyrie',
-      coverUrl:
-          'https://cdn.myanimelist.net/images/manga/3/209957.jpg',
-      type: 'Manga',
-      status: 'ongoing',
-      currentChapter: 90,
-      totalChapters: 90,
-    ),
-  ];
+  List<Manga> _myAllMangas = [];
+  bool _isLoading = true;
+  final supabase = Supabase.instance.client;
 
   final List<String> _titles = [
     'Reading',
@@ -42,30 +24,146 @@ class _MainScreenState extends State<MainScreen> {
     'Account',
   ];
 
-  void _incrementChapter(Manga manga) {
-    setState(() {
-      manga.currentChapter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    _loadMangas();
   }
 
-  void _decrementChapter(Manga manga) {
-    if (manga.currentChapter > 0) {
+  Future<void> _loadMangas() async {
+    try {
+      final response = await supabase
+          .from('mangas')
+          .select()
+          .order('created_at', ascending: false);
+
+      final List<dynamic> data = response;
+
       setState(() {
-        manga.currentChapter--;
+        _myAllMangas = data
+            .map(
+              (json) => Manga(
+                id: json['id'],
+                title: json['title'],
+                coverUrl: json['cover_url'],
+                type: json['type'],
+                status: json['status'],
+                currentChapter: json['current_chapter'],
+                totalChapters: json['total_chapters'],
+              ),
+            )
+            .toList();
+        _isLoading = false;
       });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading list: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
-  void _updateTotalChapters(Manga manga, int newTotal) {
-    setState(() {
-      manga.totalChapters = newTotal;
-    });
+  Future<void> _incrementChapter(Manga manga) async {
+    final nextChapter = manga.currentChapter + 1;
+    try {
+      await supabase
+          .from('mangas')
+          .update({'current_chapter': nextChapter})
+          .eq('id', manga.id);
+
+      setState(() {
+        manga.currentChapter = nextChapter;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating progress: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
-  void _addMangaToList(Manga manga) {
-    setState(() {
-      _myAllMangas.add(manga);
-    });
+  Future<void> _decrementChapter(Manga manga) async {
+    if (manga.currentChapter <= 0) return;
+    final nextChapter = manga.currentChapter - 1;
+    try {
+      await supabase
+          .from('mangas')
+          .update({'current_chapter': nextChapter})
+          .eq('id', manga.id);
+
+      setState(() {
+        manga.currentChapter = nextChapter;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating progress: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _updateTotalChapters(Manga manga, int newTotal) async {
+    try {
+      await supabase
+          .from('mangas')
+          .update({'total_chapters': newTotal})
+          .eq('id', manga.id);
+
+      setState(() {
+        manga.totalChapters = newTotal;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating total: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _addMangaToList(Manga manga) async {
+    try {
+      await supabase.from('mangas').insert({
+        'id': manga.id,
+        'title': manga.title,
+        'cover_url': manga.coverUrl,
+        'type': manga.type,
+        'status': manga.status,
+        'current_chapter': manga.currentChapter,
+        'total_chapters': manga.totalChapters,
+      });
+
+      setState(() {
+        _myAllMangas.add(manga);
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding manga: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _onItemTapped(int index) {
@@ -110,7 +208,11 @@ class _MainScreenState extends State<MainScreen> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
-      body: screens[_selectedIndex],
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFFFFFE4F)),
+            )
+          : screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.black,
