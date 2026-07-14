@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/manga.dart';
+import 'package:flutter/foundation.dart';
 
 class SearchScreen extends StatefulWidget {
   final Function(Manga) onMangaAdded;
@@ -26,9 +27,17 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     final query = Uri.encodeComponent(_searchController.text);
-    final url = Uri.parse(
-      'https://api.mangadex.org/manga?title=$query&includes[]=cover_art&order[relevance]=desc',
-    );
+
+    String searchPath;
+    if (kIsWeb && kReleaseMode) {
+      searchPath =
+          '/api/manga?title=$query&includes[]=cover_art&order[relevance]=desc';
+    } else {
+      searchPath =
+          'https://api.mangadex.org/manga?title=$query&includes[]=cover_art&order[relevance]=desc';
+    }
+
+    final url = Uri.parse(searchPath);
 
     try {
       final response = await http.get(url);

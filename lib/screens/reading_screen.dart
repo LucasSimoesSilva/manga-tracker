@@ -138,8 +138,9 @@ class ReadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (mangas.isEmpty)
+    if (mangas.isEmpty) {
       return const Center(child: Text('No mangas in your Reading list.'));
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(12.0),

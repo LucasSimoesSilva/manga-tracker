@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
+
 class Manga {
   final String id;
   final String title;
-  final String coverUrl;
+  final String _coverUrl;
   final String type;
   final String status;
   bool isCompleted;
@@ -12,14 +14,28 @@ class Manga {
   Manga({
     required this.id,
     required this.title,
-    required this.coverUrl,
+    required String coverUrl,
     required this.type,
     required this.status,
     required this.isCompleted,
     required this.currentChapter,
     required this.totalChapters,
     this.readingUrl,
-  });
+  }) : _coverUrl = coverUrl;
+
+  String get rawCoverUrl => _coverUrl;
+
+  String get coverUrl {
+    if (kIsWeb &&
+        kReleaseMode &&
+        _coverUrl.startsWith('https://uploads.mangadex.org/covers/')) {
+      return _coverUrl.replaceFirst(
+        'https://uploads.mangadex.org/covers/',
+        '/covers/',
+      );
+    }
+    return _coverUrl;
+  }
 
   factory Manga.fromMangaDexJson(Map<String, dynamic> json) {
     final id = json['id'];
