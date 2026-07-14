@@ -7,6 +7,7 @@ class Manga {
   bool isCompleted;
   int currentChapter;
   int totalChapters;
+  String? readingUrl;
 
   Manga({
     required this.id,
@@ -17,6 +18,7 @@ class Manga {
     required this.isCompleted,
     required this.currentChapter,
     required this.totalChapters,
+    this.readingUrl,
   });
 
   factory Manga.fromMangaDexJson(Map<String, dynamic> json) {
@@ -56,6 +58,7 @@ class Manga {
       isCompleted: false,
       currentChapter: 0,
       totalChapters: parsedTotalChapters,
+      readingUrl: null,
     );
   }
 }

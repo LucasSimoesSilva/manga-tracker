@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/manga.dart';
 import 'reading_screen.dart';
 import 'search_screen.dart';
@@ -51,6 +52,7 @@ class _MainScreenState extends State<MainScreen> {
                 isCompleted: json['is_completed'] ?? false,
                 currentChapter: json['current_chapter'],
                 totalChapters: json['total_chapters'],
+                readingUrl: json['reading_url'],
               ),
             )
             .toList();
@@ -117,6 +119,23 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  Future<void> _updateReadingUrl(Manga manga, String newUrl) async {
+    try {
+      await supabase
+          .from('mangas')
+          .update({'reading_url': newUrl})
+          .eq('id', manga.id);
+
+      setState(() {
+        manga.readingUrl = newUrl;
+      });
+    } catch (e) {
+      setState(() {
+        manga.readingUrl = newUrl;
+      });
+    }
+  }
+
   Future<void> _completeManga(Manga manga) async {
     try {
       await supabase
@@ -162,6 +181,7 @@ class _MainScreenState extends State<MainScreen> {
         'current_chapter': manga.currentChapter,
         'total_chapters': manga.totalChapters,
         'is_completed': false,
+        'reading_url': manga.readingUrl,
       });
 
       setState(() {
@@ -210,11 +230,13 @@ class _MainScreenState extends State<MainScreen> {
         onDecrement: _decrementChapter,
         onComplete: _completeManga,
         onUpdateTotal: _updateTotalChapters,
+        onUpdateUrl: _updateReadingUrl,
       ),
       UpToDateScreen(
         mangas: upToDateMangas,
         onComplete: _completeManga,
         onUpdateTotal: _updateTotalChapters,
+        onUpdateUrl: _updateReadingUrl,
       ),
       CompletedScreen(mangas: completedMangas, onReopen: _reopenManga),
       const AccountScreen(),
@@ -276,13 +298,62 @@ class UpToDateScreen extends StatelessWidget {
   final List<Manga> mangas;
   final Function(Manga) onComplete;
   final Function(Manga, int) onUpdateTotal;
+  final Function(Manga, String) onUpdateUrl;
 
   const UpToDateScreen({
     super.key,
     required this.mangas,
     required this.onComplete,
     required this.onUpdateTotal,
+    required this.onUpdateUrl,
   });
+
+  Future<void> _launchUrl(String urlString) async {
+    final url = Uri.parse(urlString);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _showEditUrlDialog(BuildContext context, Manga manga) {
+    final TextEditingController controller = TextEditingController(
+      text: manga.readingUrl ?? '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Edit Reading URL for ${manga.title}'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.url,
+            decoration: const InputDecoration(
+              labelText: 'Paste your link here',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                onUpdateUrl(manga, controller.text);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.black,
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _showEditTotalDialog(BuildContext context, Manga manga) {
     final TextEditingController controller = TextEditingController(
@@ -389,13 +460,41 @@ class UpToDateScreen extends StatelessWidget {
                               letterSpacing: 1.2,
                             ),
                           ),
-                          IconButton(
-                            onPressed: () => onComplete(manga),
-                            icon: const Icon(Icons.check_circle_outline),
-                            color: Colors.grey,
-                            iconSize: 20,
-                            constraints: const BoxConstraints(),
-                            padding: EdgeInsets.zero,
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: () =>
+                                    _showEditUrlDialog(context, manga),
+                                icon: const Icon(Icons.link),
+                                color: (manga.readingUrl?.isNotEmpty ?? false)
+                                    ? const Color(0xFFFFFE4F)
+                                    : Colors.grey,
+                                iconSize: 20,
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
+                              if (manga.readingUrl?.isNotEmpty ?? false) ...[
+                                const SizedBox(width: 12),
+                                IconButton(
+                                  onPressed: () =>
+                                      _launchUrl(manga.readingUrl!),
+                                  icon: const Icon(Icons.open_in_browser),
+                                  color: Colors.greenAccent,
+                                  iconSize: 20,
+                                  constraints: const BoxConstraints(),
+                                  padding: EdgeInsets.zero,
+                                ),
+                              ],
+                              const SizedBox(width: 12),
+                              IconButton(
+                                onPressed: () => onComplete(manga),
+                                icon: const Icon(Icons.check_circle_outline),
+                                color: Colors.grey,
+                                iconSize: 20,
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -584,7 +683,7 @@ class CompletedScreen extends StatelessWidget {
                               color: Colors.grey[800],
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: const Color(0xFFFFFE4F),
+                                color: Colors.green,
                                 width: 0.5,
                               ),
                             ),

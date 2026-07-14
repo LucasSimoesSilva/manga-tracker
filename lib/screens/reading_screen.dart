@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/manga.dart';
 
 class ReadingScreen extends StatelessWidget {
@@ -7,6 +8,7 @@ class ReadingScreen extends StatelessWidget {
   final Function(Manga) onDecrement;
   final Function(Manga) onComplete;
   final Function(Manga, int) onUpdateTotal;
+  final Function(Manga, String) onUpdateUrl;
 
   const ReadingScreen({
     super.key,
@@ -15,7 +17,55 @@ class ReadingScreen extends StatelessWidget {
     required this.onDecrement,
     required this.onComplete,
     required this.onUpdateTotal,
+    required this.onUpdateUrl,
   });
+
+  Future<void> _launchUrl(String urlString) async {
+    final url = Uri.parse(urlString);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _showEditUrlDialog(BuildContext context, Manga manga) {
+    final TextEditingController controller = TextEditingController(
+      text: manga.readingUrl ?? '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Edit Reading URL for ${manga.title}'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.url,
+            decoration: const InputDecoration(
+              labelText: 'Paste your link here',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                onUpdateUrl(manga, controller.text);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.black,
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   void _showEditTotalDialog(BuildContext context, Manga manga) {
     final TextEditingController controller = TextEditingController(
@@ -120,13 +170,41 @@ class ReadingScreen extends StatelessWidget {
                               letterSpacing: 1.2,
                             ),
                           ),
-                          IconButton(
-                            onPressed: () => onComplete(manga),
-                            icon: const Icon(Icons.check_circle_outline),
-                            color: Colors.grey,
-                            iconSize: 20,
-                            constraints: const BoxConstraints(),
-                            padding: EdgeInsets.zero,
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: () =>
+                                    _showEditUrlDialog(context, manga),
+                                icon: const Icon(Icons.link),
+                                color: (manga.readingUrl?.isNotEmpty ?? false)
+                                    ? const Color(0xFFFFFE4F)
+                                    : Colors.grey,
+                                iconSize: 20,
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
+                              if (manga.readingUrl?.isNotEmpty ?? false) ...[
+                                const SizedBox(width: 12),
+                                IconButton(
+                                  onPressed: () =>
+                                      _launchUrl(manga.readingUrl!),
+                                  icon: const Icon(Icons.open_in_browser),
+                                  color: Colors.greenAccent,
+                                  iconSize: 20,
+                                  constraints: const BoxConstraints(),
+                                  padding: EdgeInsets.zero,
+                                ),
+                              ],
+                              const SizedBox(width: 12),
+                              IconButton(
+                                onPressed: () => onComplete(manga),
+                                icon: const Icon(Icons.check_circle_outline),
+                                color: Colors.grey,
+                                iconSize: 20,
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
+                            ],
                           ),
                         ],
                       ),
