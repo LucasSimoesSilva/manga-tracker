@@ -121,6 +121,28 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  Future<void> _updateCurrentChapter(Manga manga, int newCurrent) async {
+    try {
+      await supabase
+          .from('mangas')
+          .update({'current_chapter': newCurrent})
+          .eq('id', manga.id);
+
+      setState(() {
+        manga.currentChapter = newCurrent;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating chapter: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _updateReadingUrl(Manga manga, String newUrl) async {
     try {
       await supabase
@@ -258,6 +280,7 @@ class _MainScreenState extends State<MainScreen> {
         onDecrement: _decrementChapter,
         onComplete: _completeManga,
         onUpdateTotal: _updateTotalChapters,
+        onUpdateCurrent: _updateCurrentChapter,
         onUpdateUrl: _updateReadingUrl,
         onDelete: _deleteManga,
       ),

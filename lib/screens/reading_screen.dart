@@ -8,6 +8,7 @@ class ReadingScreen extends StatelessWidget {
   final Function(Manga) onDecrement;
   final Function(Manga) onComplete;
   final Function(Manga, int) onUpdateTotal;
+  final Function(Manga, int) onUpdateCurrent;
   final Function(Manga, String) onUpdateUrl;
   final Function(Manga) onDelete;
 
@@ -18,6 +19,7 @@ class ReadingScreen extends StatelessWidget {
     required this.onDecrement,
     required this.onComplete,
     required this.onUpdateTotal,
+    required this.onUpdateCurrent,
     required this.onUpdateUrl,
     required this.onDelete,
   });
@@ -68,22 +70,40 @@ class ReadingScreen extends StatelessWidget {
     );
   }
 
-  void _showEditTotalDialog(BuildContext context, Manga manga) {
-    final TextEditingController controller = TextEditingController(
+  void _showEditChaptersDialog(BuildContext context, Manga manga) {
+    final TextEditingController controllerTotalChap = TextEditingController(
       text: manga.totalChapters.toString(),
     );
+    final TextEditingController controllerCurrentChap = TextEditingController(
+      text: manga.currentChapter.toString(),
+    );
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Edit Total for ${manga.title}'),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Latest Available Chapter',
-              border: OutlineInputBorder(),
-            ),
+          title: Text('Edit Chapters for ${manga.title}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: controllerTotalChap,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Latest Available Chapter',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controllerCurrentChap,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Current Chapter',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -93,8 +113,15 @@ class ReadingScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 final newTotal =
-                    int.tryParse(controller.text) ?? manga.totalChapters;
+                    int.tryParse(controllerTotalChap.text) ??
+                    manga.totalChapters;
                 onUpdateTotal(manga, newTotal);
+
+                final newCurrent =
+                    int.tryParse(controllerCurrentChap.text) ??
+                    manga.currentChapter;
+                onUpdateCurrent(manga, newCurrent);
+
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
@@ -111,9 +138,8 @@ class ReadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (mangas.isEmpty) {
+    if (mangas.isEmpty)
       return const Center(child: Text('No mangas in your Reading list.'));
-    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(12.0),
@@ -268,7 +294,8 @@ class ReadingScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             GestureDetector(
-                              onTap: () => _showEditTotalDialog(context, manga),
+                              onTap: () =>
+                                  _showEditChaptersDialog(context, manga),
                               child: Row(
                                 children: [
                                   Text(
