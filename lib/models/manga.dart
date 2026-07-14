@@ -26,14 +26,23 @@ class Manga {
   String get rawCoverUrl => _coverUrl;
 
   String get coverUrl {
-    if (kIsWeb &&
-        kReleaseMode &&
-        _coverUrl.startsWith('https://uploads.mangadex.org/covers/')) {
+    if (kIsWeb && kReleaseMode) {
+      if (_coverUrl.startsWith('https://uploads.mangadex.org/covers/')) {
+        return _coverUrl.replaceFirst(
+          'https://uploads.mangadex.org/covers/',
+          '/covers/',
+        );
+      }
+      return _coverUrl;
+    }
+
+    if (_coverUrl.startsWith('/covers/')) {
       return _coverUrl.replaceFirst(
-        'https://uploads.mangadex.org/covers/',
         '/covers/',
+        'https://uploads.mangadex.org/covers/',
       );
     }
+
     return _coverUrl;
   }
 
