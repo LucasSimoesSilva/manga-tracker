@@ -9,6 +9,7 @@ class ReadingScreen extends StatelessWidget {
   final Function(Manga) onComplete;
   final Function(Manga, int) onUpdateTotal;
   final Function(Manga, String) onUpdateUrl;
+  final Function(Manga) onDelete;
 
   const ReadingScreen({
     super.key,
@@ -18,6 +19,7 @@ class ReadingScreen extends StatelessWidget {
     required this.onComplete,
     required this.onUpdateTotal,
     required this.onUpdateUrl,
+    required this.onDelete,
   });
 
   Future<void> _launchUrl(String urlString) async {
@@ -31,7 +33,6 @@ class ReadingScreen extends StatelessWidget {
     final TextEditingController controller = TextEditingController(
       text: manga.readingUrl ?? '',
     );
-
     showDialog(
       context: context,
       builder: (context) {
@@ -71,7 +72,6 @@ class ReadingScreen extends StatelessWidget {
     final TextEditingController controller = TextEditingController(
       text: manga.totalChapters.toString(),
     );
-
     showDialog(
       context: context,
       builder: (context) {
@@ -121,152 +121,197 @@ class ReadingScreen extends StatelessWidget {
       itemBuilder: (context, index) {
         final manga = mangas[index];
 
-        return Card(
-          color: const Color(0xFF1E1E1E),
-          elevation: 4,
-          margin: const EdgeInsets.only(bottom: 16.0),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+        return Dismissible(
+          key: Key(manga.id),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            margin: const EdgeInsets.only(bottom: 16.0),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: const Icon(Icons.delete, color: Colors.white, size: 30),
           ),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
-                ),
-                child: Image.network(
-                  manga.coverUrl,
-                  width: 90,
-                  height: 130,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
+          confirmDismiss: (direction) async {
+            return await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text("Delete Manga"),
+                  content: Text(
+                    "Are you sure you want to delete '${manga.title}'?",
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text("Delete"),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+          onDismissed: (direction) => onDelete(manga),
+          child: Card(
+            color: const Color(0xFF1E1E1E),
+            elevation: 4,
+            margin: const EdgeInsets.only(bottom: 16.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
+                  child: Image.network(
+                    manga.coverUrl,
                     width: 90,
                     height: 130,
-                    color: Colors.grey[800],
-                    child: const Icon(Icons.broken_image, color: Colors.grey),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 90,
+                      height: 130,
+                      color: Colors.grey[800],
+                      child: const Icon(Icons.broken_image, color: Colors.grey),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 12.0,
-                    horizontal: 8.0,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            manga.type.toUpperCase(),
-                            style: const TextStyle(
-                              color: Color(0xFFFFFE4F),
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              IconButton(
-                                onPressed: () =>
-                                    _showEditUrlDialog(context, manga),
-                                icon: const Icon(Icons.link),
-                                color: (manga.readingUrl?.isNotEmpty ?? false)
-                                    ? const Color(0xFFFFFE4F)
-                                    : Colors.grey,
-                                iconSize: 20,
-                                constraints: const BoxConstraints(),
-                                padding: EdgeInsets.zero,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12.0,
+                      horizontal: 8.0,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              manga.type.toUpperCase(),
+                              style: const TextStyle(
+                                color: Color(0xFFFFFE4F),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
                               ),
-                              if (manga.readingUrl?.isNotEmpty ?? false) ...[
-                                const SizedBox(width: 12),
+                            ),
+                            Row(
+                              children: [
                                 IconButton(
                                   onPressed: () =>
-                                      _launchUrl(manga.readingUrl!),
-                                  icon: const Icon(Icons.open_in_browser),
-                                  color: Colors.greenAccent,
+                                      _showEditUrlDialog(context, manga),
+                                  icon: const Icon(Icons.link),
+                                  color: (manga.readingUrl?.isNotEmpty ?? false)
+                                      ? const Color(0xFFFFFE4F)
+                                      : Colors.grey,
+                                  iconSize: 20,
+                                  constraints: const BoxConstraints(),
+                                  padding: EdgeInsets.zero,
+                                ),
+                                if (manga.readingUrl?.isNotEmpty ?? false) ...[
+                                  const SizedBox(width: 12),
+                                  IconButton(
+                                    onPressed: () =>
+                                        _launchUrl(manga.readingUrl!),
+                                    icon: const Icon(Icons.open_in_browser),
+                                    color: Colors.greenAccent,
+                                    iconSize: 20,
+                                    constraints: const BoxConstraints(),
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                ],
+                                const SizedBox(width: 12),
+                                IconButton(
+                                  onPressed: () => onComplete(manga),
+                                  icon: const Icon(Icons.check_circle_outline),
+                                  color: Colors.grey,
                                   iconSize: 20,
                                   constraints: const BoxConstraints(),
                                   padding: EdgeInsets.zero,
                                 ),
                               ],
-                              const SizedBox(width: 12),
-                              IconButton(
-                                onPressed: () => onComplete(manga),
-                                icon: const Icon(Icons.check_circle_outline),
-                                color: Colors.grey,
-                                iconSize: 20,
-                                constraints: const BoxConstraints(),
-                                padding: EdgeInsets.zero,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        manga.title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                            ),
+                          ],
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          GestureDetector(
-                            onTap: () => _showEditTotalDialog(context, manga),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Ch. ${manga.currentChapter} / ${manga.totalChapters}',
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white70,
+                        const SizedBox(height: 4),
+                        Text(
+                          manga.title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            GestureDetector(
+                              onTap: () => _showEditTotalDialog(context, manga),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'Ch. ${manga.currentChapter} / ${manga.totalChapters}',
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white70,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Icon(
-                                  Icons.edit,
-                                  size: 14,
+                                  const SizedBox(width: 4),
+                                  const Icon(
+                                    Icons.edit,
+                                    size: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                IconButton(
+                                  onPressed: () => onDecrement(manga),
+                                  icon: const Icon(Icons.remove_circle_outline),
                                   color: Colors.grey,
+                                  iconSize: 28,
+                                ),
+                                IconButton(
+                                  onPressed: () => onIncrement(manga),
+                                  icon: const Icon(Icons.add_circle),
+                                  color: Theme.of(context).primaryColor,
+                                  iconSize: 28,
                                 ),
                               ],
                             ),
-                          ),
-                          Row(
-                            children: [
-                              IconButton(
-                                onPressed: () => onDecrement(manga),
-                                icon: const Icon(Icons.remove_circle_outline),
-                                color: Colors.grey,
-                                iconSize: 28,
-                              ),
-                              IconButton(
-                                onPressed: () => onIncrement(manga),
-                                icon: const Icon(Icons.add_circle),
-                                color: Theme.of(context).primaryColor,
-                                iconSize: 28,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
