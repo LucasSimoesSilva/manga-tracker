@@ -33,9 +33,11 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _loadMangas() async {
     try {
+      final userId = supabase.auth.currentUser!.id;
       final response = await supabase
           .from('mangas')
           .select()
+          .eq('user_id', userId)
           .order('created_at', ascending: false);
 
       final List<dynamic> data = response;
@@ -172,6 +174,7 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _addMangaToList(Manga manga) async {
     try {
+      final userId = supabase.auth.currentUser!.id;
       await supabase.from('mangas').insert({
         'id': manga.id,
         'title': manga.title,
@@ -182,15 +185,21 @@ class _MainScreenState extends State<MainScreen> {
         'total_chapters': manga.totalChapters,
         'is_completed': false,
         'reading_url': manga.readingUrl,
+        'user_id': userId,
       });
 
       setState(() {
         _myAllMangas.add(manga);
       });
     } catch (e) {
-      setState(() {
-        _myAllMangas.add(manga);
-      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding manga: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
