@@ -2,24 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/manga.dart';
 
-class ReadingScreen extends StatelessWidget {
+class UpToDateScreen extends StatelessWidget {
   final List<Manga> mangas;
-  final Function(Manga) onIncrement;
-  final Function(Manga) onDecrement;
   final Function(Manga) onComplete;
+  final Function(Manga) onDecrement;
   final Function(Manga, int) onUpdateTotal;
-  final Function(Manga, int) onUpdateCurrent;
   final Function(Manga, String) onUpdateUrl;
   final Function(Manga) onDelete;
 
-  const ReadingScreen({
+  const UpToDateScreen({
     super.key,
     required this.mangas,
-    required this.onIncrement,
-    required this.onDecrement,
     required this.onComplete,
+    required this.onDecrement,
     required this.onUpdateTotal,
-    required this.onUpdateCurrent,
     required this.onUpdateUrl,
     required this.onDelete,
   });
@@ -70,40 +66,22 @@ class ReadingScreen extends StatelessWidget {
     );
   }
 
-  void _showEditChaptersDialog(BuildContext context, Manga manga) {
-    final TextEditingController controllerTotalChap = TextEditingController(
+  void _showEditTotalDialog(BuildContext context, Manga manga) {
+    final TextEditingController controller = TextEditingController(
       text: manga.totalChapters.toString(),
     );
-    final TextEditingController controllerCurrentChap = TextEditingController(
-      text: (manga.currentChapter + 1).toString(),
-    );
-
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Edit Chapters for ${manga.title}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              TextField(
-                controller: controllerTotalChap,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Latest Available Chapter',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controllerCurrentChap,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Next Chapter to Read',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
+          title: Text('Edit Total for ${manga.title}'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Latest Available Chapter',
+              border: OutlineInputBorder(),
+            ),
           ),
           actions: [
             TextButton(
@@ -113,19 +91,8 @@ class ReadingScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 final newTotal =
-                    int.tryParse(controllerTotalChap.text) ??
-                    manga.totalChapters;
+                    int.tryParse(controller.text) ?? manga.totalChapters;
                 onUpdateTotal(manga, newTotal);
-
-                final nextChapterValue =
-                    int.tryParse(controllerCurrentChap.text) ??
-                    (manga.currentChapter + 1);
-                int newCurrent = nextChapterValue - 1;
-                if (newCurrent < 0) {
-                  newCurrent = 0;
-                }
-                onUpdateCurrent(manga, newCurrent);
-
                 Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
@@ -142,9 +109,10 @@ class ReadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (mangas.isEmpty) {
-      return const Center(child: Text('No mangas in your Reading list.'));
-    }
+    if (mangas.isEmpty)
+      return const Center(
+        child: Text('You are not up to date with any manga.'),
+      );
 
     return ListView.builder(
       padding: const EdgeInsets.all(12.0),
@@ -299,12 +267,11 @@ class ReadingScreen extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             GestureDetector(
-                              onTap: () =>
-                                  _showEditChaptersDialog(context, manga),
+                              onTap: () => _showEditTotalDialog(context, manga),
                               child: Row(
                                 children: [
                                   Text(
-                                    'Next: ${manga.currentChapter + 1} / ${manga.totalChapters > 0 ? manga.totalChapters : '?'}',
+                                    'Last Read: ${manga.currentChapter} / ${manga.totalChapters}',
                                     style: const TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
@@ -328,11 +295,27 @@ class ReadingScreen extends StatelessWidget {
                                   color: Colors.grey,
                                   iconSize: 28,
                                 ),
-                                IconButton(
-                                  onPressed: () => onIncrement(manga),
-                                  icon: const Icon(Icons.add_circle),
-                                  color: Theme.of(context).primaryColor,
-                                  iconSize: 28,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[800],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: const Color(0xFFFFFE4F),
+                                      width: 0.5,
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'Up to Date',
+                                    style: TextStyle(
+                                      color: Color(0xFFFFFE4F),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
