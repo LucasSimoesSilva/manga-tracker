@@ -71,18 +71,23 @@ class _MainScreenState extends State<MainScreen> {
     if (manga.totalChapters > 0 && manga.currentChapter >= manga.totalChapters)
       return;
     final nextChapter = manga.currentChapter + 1;
+    final nowString = DateTime.now().toIso8601String();
     try {
       await supabase
           .from('mangas')
-          .update({'current_chapter': nextChapter})
+          .update({'current_chapter': nextChapter, 'created_at': nowString})
           .eq('id', manga.id);
 
       setState(() {
+        _myAllMangas.remove(manga);
         manga.currentChapter = nextChapter;
+        _myAllMangas.insert(0, manga);
       });
     } catch (e) {
       setState(() {
+        _myAllMangas.remove(manga);
         manga.currentChapter = nextChapter;
+        _myAllMangas.insert(0, manga);
       });
     }
   }
@@ -90,18 +95,23 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _decrementChapter(Manga manga) async {
     if (manga.currentChapter <= 0) return;
     final nextChapter = manga.currentChapter - 1;
+    final nowString = DateTime.now().toIso8601String();
     try {
       await supabase
           .from('mangas')
-          .update({'current_chapter': nextChapter})
+          .update({'current_chapter': nextChapter, 'created_at': nowString})
           .eq('id', manga.id);
 
       setState(() {
+        _myAllMangas.remove(manga);
         manga.currentChapter = nextChapter;
+        _myAllMangas.insert(0, manga);
       });
     } catch (e) {
       setState(() {
+        _myAllMangas.remove(manga);
         manga.currentChapter = nextChapter;
+        _myAllMangas.insert(0, manga);
       });
     }
   }
