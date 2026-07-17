@@ -135,19 +135,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
               ),
               const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _isLogin = !_isLogin;
-                  });
-                },
-                child: Text(
-                  _isLogin
-                      ? "Don't have an account? Sign Up"
-                      : "Already have an account? Sign In",
-                  style: const TextStyle(color: Colors.white70),
-                ),
-              ),
+              // If you want to active sign up in your deploy, just uncomment the lines below
+              // TextButton(
+              //   onPressed: () {
+              //     setState(() {
+              //       _isLogin = !_isLogin;
+              //     });
+              //   },
+              //   child: Text(
+              //     _isLogin
+              //         ? "Don't have an account? Sign Up"
+              //         : "Already have an account? Sign In",
+              //     style: const TextStyle(color: Colors.white70),
+              //   ),
+              // ),
             ],
           ),
         ),

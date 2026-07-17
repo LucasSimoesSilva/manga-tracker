@@ -82,7 +82,7 @@ class _ReadingMangaCardState extends State<ReadingMangaCard> {
 
   void _triggerFlash() {
     setState(() {
-      _cardColor = const Color(0x33FFFFFE4F);
+      _cardColor = const Color(0x33fffffe4f);
     });
     Future.delayed(const Duration(milliseconds: 150), () {
       if (mounted) {
